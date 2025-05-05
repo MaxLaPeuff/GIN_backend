@@ -1,3 +1,4 @@
+from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -31,4 +32,6 @@ urlpatterns = [
 
     # Redoc (optionnel)
     path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # ... autres apps
+    path('api/realisations/', include('realisations.urls')),
 ]

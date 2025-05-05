@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "gin",
     'drf_yasg',
     'drf_spectacular',
+    'realisations'
 ]
 
 MIDDLEWARE = [
