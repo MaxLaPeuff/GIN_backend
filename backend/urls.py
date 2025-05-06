@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/', include('gin.urls')),
     path('api/', include('inscription.urls')),
     path('api/stages/', include('stages.urls')),
+    path('api/accounts/', include('accounts.urls')),
     
     # JWT Authentication
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
