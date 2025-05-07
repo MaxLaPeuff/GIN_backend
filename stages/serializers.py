@@ -31,7 +31,7 @@ class DemandeStageSerializer(serializers.ModelSerializer):
         model = DemandeStage
         # Liste des champs à inclure dans la sérialisation
         fields = ['id', 'email', 'cv', 'domaine', 'requete', 'statut', 
-                 'date_demande', 'date_modification', 'code_unique']
+                 'date_demande', 'date_modification', 'code_unique','domaine_nom']
         # Champs qui ne peuvent pas être modifiés directement
         read_only_fields = ['code_unique', 'statut', 'date_demande', 'date_modification']
 

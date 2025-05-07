@@ -20,7 +20,6 @@ from rest_framework.decorators import action
 class DomaineStageViewSet(viewsets.ModelViewSet):
     """
     ViewSet pour gérer les domaines de stage.
-    
     Permet de lister, créer, modifier et supprimer les domaines de stage.
     Seuls les utilisateurs authentifiés peuvent effectuer des modifications.
     """
