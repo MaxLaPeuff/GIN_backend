@@ -5,6 +5,6 @@ from .views import (
 )
 
 urlpatterns = [
-    path('', PartenaireListCreateView.as_view(), name='partenaire-list-create'),
-    path('<int:pk>/', PartenaireRetrieveUpdateDestroyView.as_view(), name='partenaire-detail'),
+    path('partenaire', PartenaireListCreateView.as_view(), name='partenaire-list-create'),
+    path('<int:pk>/partenaire-update', PartenaireRetrieveUpdateDestroyView.as_view(), name='partenaire-detail'),
 ]
