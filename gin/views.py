@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from .models import Formation, Service
-from .serializer import FormationSerializer, ServiceSerializer
+from .models import Formation
+from .serializer import FormationSerializer
 from drf_spectacular.utils import extend_schema, extend_schema_view,OpenApiExample
 
 """
@@ -51,44 +51,3 @@ class FormationViewSet(viewsets.ModelViewSet):
     queryset = Formation.objects.all()
     serializer_class = FormationSerializer
 
-
-@extend_schema_view(
-    list=extend_schema(
-        summary="Lister tous les services",  # 🛠️ corriger 'summarry' → 'summary'
-        description="Retourne la liste de tous les services enregistrés dans le système."
-    ),
-    retrieve=extend_schema(
-        summary="Détail d'un service",
-        description="Retourne les informations détaillées d'un service en fonction de son ID."
-    ),
-    create=extend_schema(
-        summary="Créer un service",
-        description="Crée un nouveau service avec les informations fournies.",
-        examples=[
-            OpenApiExample(
-                name="Exemple de création de service",
-                value={
-                    "nom": "Support technique",
-                    "description": "Assistance aux utilisateurs pour résoudre leurs problèmes techniques."
-                },
-                request_only=True,
-                response_only=False
-            )
-        ]
-    ),
-    update=extend_schema(
-        summary="Mettre à jour un service",
-        description="Met à jour les informations d'un service existant."
-    ),
-    partial_update=extend_schema(
-        summary="Mettre à jour partiellement un service",
-        description="Modifie partiellement les champs d'un service."
-    ),
-    destroy=extend_schema(
-        summary="Supprimer un service",
-        description="Supprime un service en fonction de son ID."
-    ),
-)
-class ServiceViewSet(viewsets.ModelViewSet):
-    queryset = Service.objects.all()
-    serializer_class = ServiceSerializer
