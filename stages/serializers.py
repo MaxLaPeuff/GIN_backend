@@ -1,19 +1,15 @@
-# Import du module de sérialisation de DRF
 from rest_framework import serializers
-# Import des modèles à sérialiser
-from .models import DomaineStage, DemandeStage
+from .models import OffreStage, DemandeStage
 
-class DomaineStageSerializer(serializers.ModelSerializer):
+class OffreStageSerializer(serializers.ModelSerializer):
     """
-    Sérialiseur pour le modèle DomaineStage.
+    Sérialiseur pour le modèle OffreStage.
     
-    Permet la sérialisation et désérialisation des domaines de stage.
+    Permet la sérialisation et désérialisation des offres de stage.
     Inclut tous les champs du modèle.
     """
     class Meta:
-        # Définition du modèle associé
-        model = DomaineStage
-        # Inclusion de tous les champs du modèle
+        model = OffreStage
         fields = '__all__'
 
 class DemandeStageSerializer(serializers.ModelSerializer):
@@ -21,27 +17,48 @@ class DemandeStageSerializer(serializers.ModelSerializer):
     Sérialiseur pour le modèle DemandeStage.
     
     Permet la sérialisation et désérialisation des demandes de stage.
-    Inclut tous les champs du modèle sauf le code_unique qui est généré automatiquement.
+    Les champs sensibles sont en lecture seule.
     """
-    # Champ supplémentaire pour le nom du domaine, en lecture seule
-    domaine_nom = serializers.CharField(source='domaine.nom', read_only=True)
+    # Champ supplémentaire pour le titre de l'offre, en lecture seule
+    offre_titre = serializers.CharField(source='offre.titre', read_only=True)
     
     class Meta:
-        # Définition du modèle associé
         model = DemandeStage
-        # Liste des champs à inclure dans la sérialisation
-        fields = ['id', 'email', 'cv', 'domaine', 'requete', 'statut', 
-                 'date_demande', 'date_modification', 'code_unique']
-        # Champs qui ne peuvent pas être modifiés directement
-        read_only_fields = ['code_unique', 'statut', 'date_demande', 'date_modification']
+        fields = ['id', 'email', 'cv', 'offre', 'offre_titre', 'requete', 
+                 'statut', 'date_demande', 'date_modification']
+        read_only_fields = ['statut', 'date_demande', 'date_modification']
+        
+    def validate_email(self, value):
+        """
+        Validation personnalisée pour l'email.
+        """
+        if not value:
+            raise serializers.ValidationError("L'email est requis")
+        return value
+        
+    def validate_cv(self, value):
+        """
+        Validation personnalisée pour le CV.
+        """
+        if not value:
+            raise serializers.ValidationError("Le CV est requis")
+        return value
+        
+    def validate_requete(self, value):
+        """
+        Validation personnalisée pour la requête.
+        """
+        if not value:
+            raise serializers.ValidationError("La requête est requise")
+        return value
 
-class VerificationStatutSerializer(serializers.Serializer):
-    """
-    Sérialiseur pour la vérification du statut d'une demande.
-    Utilisé uniquement pour la validation du code unique.
-    """
+#class VerificationStatutSerializer(serializers.Serializer):
+    #"""
+    #Sérialiseur pour la vérification du statut d'une demande.
+    #Utilisé uniquement pour la validation du code unique.
+    #"""
     # Champ pour le code unique de la demande
-    code_unique = serializers.UUIDField()
+    #code_unique = serializers.UUIDField()
 
 class StatutDemandeSerializer(serializers.ModelSerializer):
     """
