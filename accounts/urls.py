@@ -1,31 +1,13 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenRefreshView
+"""
+Configuration des URLs pour le module accounts.
+Ce module définit les points d'accès API pour l'authentification de l'administrateur.
+"""
+from django.urls import path
+from .views import ConnexionView, DeconnexionView
 
-from .views import (
-    CustomTokenObtainPairView,
-    UserViewSet,
-    UserProfileViewSet,
-    RoleBasedAccessView
-)
+app_name = 'accounts'
 
-# Router for viewsets
-router = DefaultRouter()
-router.register(r'users', UserViewSet)
-router.register(r'profiles', UserProfileViewSet)
-
-# URL patterns
 urlpatterns = [
-    # Router URLs
-    path('', include(router.urls)),
-    
-    # Authentication endpoints
-    path('auth/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
-    # Role-based access example
-    path('auth/roles/', RoleBasedAccessView.as_view(), name='role_based_access'),
-    
-    # Include djoser URLs for password reset, account activation, etc.
-    path('auth/', include('djoser.urls')),
+    path('admin/connexion/', ConnexionView.as_view(), name='admin-connexion'),
+    path('admin/deconnexion/', DeconnexionView.as_view(), name='admin-deconnexion'),
 ]
