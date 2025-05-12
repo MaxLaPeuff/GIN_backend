@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Formation
+from .models import Formation, InscriptionFormation
 
 class ModuleSerializer(serializers.Serializer):
     titre = serializers.CharField()
@@ -10,4 +10,9 @@ class FormationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Formation
+        fields = '__all__'
+
+class InscriptionFormationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InscriptionFormation
         fields = '__all__'

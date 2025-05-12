@@ -1,9 +1,13 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import OffreStageViewSet, DemandeStageViewSet
 
+# Création du routeur
+router = DefaultRouter()
+router.register(r'offres', OffreStageViewSet)
+router.register(r'demandes', DemandeStageViewSet)
+
+# Définition des URLs
 urlpatterns = [
-    path('domaines/', views.DomaineStageListView.as_view(), name='domaines-list'),
-    path('demande/', views.DemandeStageCreateView.as_view(), name='demande-create'),
-    path('verification-statut/', views.VerificationStatutView.as_view(), name='verification-statut'),
-    path('demande/<uuid:code_unique>/', views.DemandeStageDetailView.as_view(), name='demande-detail'),
+    path('', include(router.urls)),
 ] 

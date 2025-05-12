@@ -34,6 +34,13 @@ REST_FRAMEWORK = {
     ],
 }
 
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,  # Nombre d'éléments par page
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -47,7 +54,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "gin",
     'drf_spectacular',
-    "inscription",
+    #"inscription",
     "stages",
     "accounts",
     "partenaires",

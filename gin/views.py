@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from .models import Formation
-from .serializer import FormationSerializer
+from .models import Formation, InscriptionFormation
+from .serializer import FormationSerializer, InscriptionFormationSerializer
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiExample
 
 @extend_schema_view(
@@ -74,3 +74,39 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiExam
 class FormationViewSet(viewsets.ModelViewSet):
     queryset = Formation.objects.all()
     serializer_class = FormationSerializer
+
+
+
+@extend_schema_view(
+    list=extend_schema(
+        summary="Lister les inscriptions",
+        description="Retourne toutes les inscriptions aux formations."
+    ),
+    retrieve=extend_schema(
+        summary="Détail d'une inscription",
+        description="Retourne les informations d'une inscription spécifique."
+    ),
+    create=extend_schema(
+        summary="S'inscrire à une formation",
+        description="Permet à un utilisateur de s'inscrire à une formation.",
+        examples=[
+            OpenApiExample(
+                name="Exemple d'inscription",
+                value={
+                    "formation": 1,
+                    "nom": "Doe",
+                    "prenom": "John",
+                    "email": "john.doe@example.com",
+                    "motivations": "Je souhaite me former pour changer de carrière",
+                    "dernier_diplome": "LICENCE",
+                    "domaine": "Informatique",
+                    "annees_experience": 2
+                },
+                request_only=True
+            )
+        ]
+    )
+)
+class InscriptionFormationViewSet(viewsets.ModelViewSet):
+    queryset = InscriptionFormation.objects.all()
+    serializer_class = InscriptionFormationSerializer
