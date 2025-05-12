@@ -1,13 +1,16 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 
-# Create your models here.
-
 class Formation(models.Model):
     titre = models.CharField(max_length=100)
     description = models.TextField()
-    prerecquis = models.TextField(verbose_name="Pré-requis")
-    acquis=models.TextField(verbose_name="acquis")
+    objectifs = models.JSONField(default=list)
+    
+    # Programme structuré : liste de modules (section + contenus)
+    programme = models.JSONField(default=list)
+
+    prerecquis = models.JSONField(default=list)
+    acquis = models.TextField(verbose_name="acquis")
     debouche = models.TextField(verbose_name="Débouchés")
     prix = models.DecimalField(max_digits=10, decimal_places=2)
     date_debut = models.DateField()
@@ -20,4 +23,3 @@ class Formation(models.Model):
     def clean(self):
         if self.date_fin and self.date_fin < self.date_debut:
             raise ValidationError("La date de fin doit être postérieure à la date de début.")
-    
