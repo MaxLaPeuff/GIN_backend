@@ -24,33 +24,7 @@ class DemandeStageSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = DemandeStage
-        fields = ['id', 'email', 'cv', 'offre', 'offre_titre', 'requete', 
-                 'statut', 'date_demande', 'date_modification']
-        read_only_fields = ['statut', 'date_demande', 'date_modification']
-        
-    def validate_email(self, value):
-        """
-        Validation personnalisée pour l'email.
-        """
-        if not value:
-            raise serializers.ValidationError("L'email est requis")
-        return value
-        
-    def validate_cv(self, value):
-        """
-        Validation personnalisée pour le CV.
-        """
-        if not value:
-            raise serializers.ValidationError("Le CV est requis")
-        return value
-        
-    def validate_requete(self, value):
-        """
-        Validation personnalisée pour la requête.
-        """
-        if not value:
-            raise serializers.ValidationError("La requête est requise")
-        return value
+
 
 #class VerificationStatutSerializer(serializers.Serializer):
     #"""

@@ -7,15 +7,7 @@ from .serializers import DemandeStageSerializer, OffreStageSerializer
 
 class OffreStageViewSet(viewsets.ModelViewSet):
     """
-    ViewSet pour gérer les offres de stage.
-    
-    Permet de :
-    - Lister toutes les offres (public)
-    - Créer une nouvelle offre (admin uniquement)
-    - Récupérer une offre spécifique (public)
-    - Mettre à jour une offre (admin uniquement)
-    - Supprimer une offre (admin uniquement)
-    """
+
     queryset = OffreStage.objects.all()
     serializer_class = OffreStageSerializer
     
