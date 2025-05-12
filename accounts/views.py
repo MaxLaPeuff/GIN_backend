@@ -1,158 +1,107 @@
-from django.contrib.auth import get_user_model
-from django.utils.translation import gettext_lazy as _
-from rest_framework import viewsets, status, generics, mixins
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
+"""
+Vues pour le module accountsCes vues gèrent l'authentification de l'administrateur et les opérations associées.
+"""
+from rest_framework import status, generics
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import login, logout
+from django.contrib.auth.models import User
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 
-from .models import UserProfile
-from .permissions import IsAdminUser, IsOwnerOrAdmin
-from .serializers import UserSerializer, UserProfileSerializer
-
-User = get_user_model()
+from .models import Administrateur
+from .serializers import ConnexionSerializer, AdministrateurSerializer
 
 
-class CustomTokenObtainPairView(TokenObtainPairView):
+class ConnexionView(APIView):
     """
-    Vue personnalisée pour l'obtention de token qui ajoute les détails de l'utilisateur à la réponse.
+    Vue pour la connexion de l'administrateur.
+    Utilise l'authentification par session Django.
     """
+    permission_classes = [AllowAny]
+    serializer_class = ConnexionSerializer
+
+    @extend_schema(
+        request=ConnexionSerializer,
+        responses={
+            200: OpenApiResponse(description="Connexion réussie"),
+            400: OpenApiResponse(description="Identifiants invalides")
+        },
+        description="Connexion de l'administrateur",
+        operation_id="admin_login"
+    )
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        
-        if response.status_code == 200:
-            user = User.objects.get(email=request.data.get('email'))
-            user_data = UserSerializer(user).data
-            response.data['user'] = user_data
-        
-        return response
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    Point d'accès API pour la gestion des utilisateurs.
-    Les administrateurs peuvent lister, créer, modifier et supprimer des utilisateurs.
-    Les utilisateurs réguliers peuvent uniquement consulter et mettre à jour leurs propres profils.
-    """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    def get_permissions(self):
         """
-        Renvoie les permissions appropriées selon l'action.
+        Authentifie l'administrateur avec les identifiants fournis.
         """
-        if self.action == 'create':
-            permission_classes = [IsAdminUser]
-        elif self.action in ['list', 'destroy']:
-            permission_classes = [IsAdminUser]
-        elif self.action in ['retrieve', 'update', 'partial_update']:
-            permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
-        elif self.action == 'me':
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
-    def get_queryset(self):
-        """
-        Restreint les utilisateurs à ne voir qu'eux-mêmes, sauf s'ils sont administrateurs.
-        """
-        user = self.request.user
-        if user.is_authenticated and user.role == User.Roles.ADMIN:
-            return self.queryset
-        return self.queryset.filter(id=user.id)
-
-    @action(detail=False, methods=['get', 'put', 'patch'])
-    def me(self, request):
-        """
-        Obtenir ou mettre à jour les informations de l'utilisateur actuel.
-        """
-        user = request.user
-        if request.method == 'GET':
-            serializer = self.get_serializer(user)
-            return Response(serializer.data)
-        
-        serializer = self.get_serializer(user, data=request.data, partial=True)
+        serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-
-class UserProfileViewSet(viewsets.ModelViewSet):
-    """
-    Point d'accès API pour les profils utilisateurs.
-    Les utilisateurs ne peuvent consulter et mettre à jour que leurs propres profils.
-    """
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
-    def get_queryset(self):
-        """
-        Restreint les profils à ne voir que leur propre profil, sauf s'ils sont administrateurs.
-        """
-        user = self.request.user
-        if user.is_authenticated and user.role == User.Roles.ADMIN:
-            return self.queryset
-        return self.queryset.filter(user=user)
-    
-    @action(detail=False, methods=['get', 'put', 'patch'])
-    def me(self, request):
-        """
-        Get or update the current user's profile.
-        """
-        try:
-            profile = UserProfile.objects.get(user=request.user)
-        except UserProfile.DoesNotExist:
-            profile = UserProfile.objects.create(user=request.user)
+          # Connexion de l'utilisateur avec une session
+        user = serializer.validated_data['user']
+        login(request, user)
+        
+        # Récupérer les informations de l'administrateur
+        admin = Administrateur.objects.filter(utilisateur=user).first()
+        
+        # Vérifier si l'utilisateur est un administrateur
+        if admin is None:
+            return Response({
+                'message': 'Connexion réussie, mais l\'utilisateur n\'est pas un administrateur',
+                'admin': None
+            }, status=status.HTTP_200_OK)
             
-        if request.method == 'GET':
-            serializer = self.get_serializer(profile)
-            return Response(serializer.data)
+        admin_serializer = AdministrateurSerializer(admin)
         
-        serializer = self.get_serializer(profile, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        return Response({
+            'message': 'Connexion réussie',
+            'admin': admin_serializer.data
+        }, status=status.HTTP_200_OK)
 
 
-class RoleBasedAccessView(APIView):
+class DeconnexionView(APIView):
     """
-    Vue d'exemple démontrant le contrôle d'accès basé sur les rôles.
-    Cette vue renvoie différentes données selon le rôle de l'utilisateur.
+    Vue pour la déconnexion de l'administrateur.
     """
     permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        responses={200: OpenApiResponse(description="Déconnexion réussie")},
+        description="Déconnexion de l'administrateur",
+        operation_id="admin_logout"
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Déconnecte l'administrateur.
+        """
+        logout(request)
+        return Response({'message': 'Déconnexion réussie'}, status=status.HTTP_200_OK)
+
+
+class ProfileAdminView(generics.RetrieveAPIView):
+    """
+    Vue pour afficher le profil de l'administrateur connecté.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = AdministrateurSerializer
     
-    def get(self, request):
-        user = request.user
-          # Réponse de base pour tous les utilisateurs authentifiés
-        response_data = {
-            'status': 'success',
-            'user_role': user.get_role_display(),
-            'permissions': [],
-        }
+    @extend_schema(
+        responses={
+            200: AdministrateurSerializer,
+            403: OpenApiResponse(description="Non autorisé")
+        },
+        description="Profil de l'administrateur connecté",
+        operation_id="admin_profile"
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Récupère les informations de l'administrateur connecté.
+        """
+        admin = Administrateur.objects.filter(utilisateur=request.user).first()
+        if admin is None:
+            return Response(
+                {'message': "Vous n'êtes pas un administrateur."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
-        # Ajouter des données spécifiques au rôle
-        if user.role == User.Roles.ADMIN:
-            response_data['permissions'] = [
-                'can_create_users', 
-                'can_edit_users', 
-                'can_delete_users',
-                'can_create_content',
-                'can_edit_content',
-                'can_delete_content',
-                'can_view_analytics'
-            ]
-            response_data['message'] = _("Welcome, Administrator. You have full access to the system.")
-            
-        elif user.role == User.Roles.EDITOR:
-            response_data['permissions'] = [
-                'can_create_content',
-                'can_edit_content',
-                'can_delete_own_content'
-            ]
-            response_data['message'] = _("Welcome, Content Editor. You can manage website content.")
-            
-        else:  # Regular user
-            response_data['permissions'] = ['can_view_content']
-            response_data['message'] = _("Welcome, User. You have view-only access.")
-        
-        return Response(response_data)
+        serializer = self.serializer_class(admin)
+        return Response(serializer.data)

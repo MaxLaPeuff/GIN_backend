@@ -12,7 +12,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -35,6 +34,12 @@ REST_FRAMEWORK = {
     ],
 }
 
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,  # Nombre d'éléments par page
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
 
 # Application definition
 
@@ -49,7 +54,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "gin",
     'drf_spectacular',
-    "inscription",
+    #"inscription",
     "stages",
     "accounts",
     "partenaires",
@@ -137,9 +142,6 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# Custom user model
-AUTH_USER_MODEL = 'accounts.User'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
