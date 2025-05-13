@@ -50,8 +50,8 @@ class OffreStage(models.Model):
     description = models.TextField()
     date_debut = models.DateField()
     duree = models.IntegerField(help_text="Durée en semaines")
-    competences = models.TextField()
-    mission = models.TextField()
+    competences = models.JSONField(default=list, help_text="Liste des compétences requises")
+    mission = models.JSONField(default=list, help_text="Liste des missions à accomplir")
     
     def __str__(self):
         return self.titre
