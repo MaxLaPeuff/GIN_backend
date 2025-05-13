@@ -2,7 +2,7 @@
 Définition des permissions personnalisées pour le projet.
 """
 
-'''
+
 from rest_framework import permissions
 from accounts.models import Administrateur
 
@@ -25,4 +25,3 @@ class EstAdministrateur(permissions.BasePermission):
         except Exception:
             return False
         
-'''
