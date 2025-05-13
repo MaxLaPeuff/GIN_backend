@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     "accounts",
     "partenaires",
     "realisations",
-    "corsheaders",
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -61,10 +61,16 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',  # juste après SecurityMiddleware
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+
     
 ]
 
-CORS_ALLOW_ALL_ORIGIN=True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Frontend React local
+]
+
+CORS_ALLOW_CREDENTIALS = True  # Si tu utilises des cookies ou tokens avec credentials
+
 
 ROOT_URLCONF = "backend.urls"
 
