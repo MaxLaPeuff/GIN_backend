@@ -1,6 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny,IsAdminUser
 from rest_framework.response import Response
 from django.db.models import Count
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, extend_schema_view
@@ -11,8 +11,6 @@ from .serializers import (
     RealisationDetailSerializer,
     RealisationCreateUpdateSerializer
 )
-from backend.permissions import EstAdministrateur
-from backend.permissions import EstAdministrateur
 
 
 class RealisationListView(generics.ListAPIView):
@@ -82,7 +80,7 @@ class RealisationCreateView(generics.CreateAPIView):
     Seul l'administrateur peut créer des réalisations.
     """
     serializer_class = RealisationCreateUpdateSerializer
-    permission_classes = [EstAdministrateur]
+    permission_classes = [IsAdminUser]
     
     @extend_schema(
         request=RealisationCreateUpdateSerializer,
@@ -106,7 +104,7 @@ class RealisationUpdateView(generics.UpdateAPIView):
     """
     queryset = Realisation.objects.all()
     serializer_class = RealisationCreateUpdateSerializer
-    permission_classes = [EstAdministrateur]
+    permission_classes = [IsAdminUser]
     
     @extend_schema(
         request=RealisationCreateUpdateSerializer,
@@ -141,7 +139,7 @@ class RealisationDeleteView(generics.DestroyAPIView):
     Seul l'administrateur peut supprimer des réalisations.
     """
     queryset = Realisation.objects.all()
-    permission_classes = [EstAdministrateur]
+    permission_classes = [IsAdminUser]
     
     @extend_schema(
         responses={
