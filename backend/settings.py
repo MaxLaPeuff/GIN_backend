@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "accounts",
     "partenaires",
     "realisations",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -58,7 +59,12 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',  # juste après SecurityMiddleware
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    
 ]
+
+CORS_ALLOW_ALL_ORIGIN=True
 
 ROOT_URLCONF = "backend.urls"
 
