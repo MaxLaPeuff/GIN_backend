@@ -1,5 +1,6 @@
 """
-Vues pour le module accountsCes vues gèrent l'authentification de l'administrateur et les opérations associées.
+Vues pour le module accounts.
+Ces vues gèrent l'authentification de l'administrateur et les opérations associées.
 """
 from rest_framework import status, generics
 from rest_framework.views import APIView
@@ -10,7 +11,7 @@ from django.contrib.auth.models import User
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
 from .models import Administrateur
-from .serializers import ConnexionSerializer, AdministrateurSerializer
+from .serializers import ConnexionSerializer, AdministrateurSerializer, StatusAuthenticationSerializer
 
 
 class ConnexionView(APIView):
@@ -36,7 +37,7 @@ class ConnexionView(APIView):
         """
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-          # Connexion de l'utilisateur avec une session
+        # Connexion de l'utilisateur avec une session
         user = serializer.validated_data['user']
         login(request, user)
         
@@ -47,14 +48,16 @@ class ConnexionView(APIView):
         if admin is None:
             return Response({
                 'message': 'Connexion réussie, mais l\'utilisateur n\'est pas un administrateur',
-                'admin': None
+                'admin': None,
+                'is_admin': False
             }, status=status.HTTP_200_OK)
             
         admin_serializer = AdministrateurSerializer(admin)
         
         return Response({
             'message': 'Connexion réussie',
-            'admin': admin_serializer.data
+            'admin': admin_serializer.data,
+            'is_admin': True
         }, status=status.HTTP_200_OK)
 
 
@@ -75,6 +78,41 @@ class DeconnexionView(APIView):
         """
         logout(request)
         return Response({'message': 'Déconnexion réussie'}, status=status.HTTP_200_OK)
+
+
+class StatusAuthenticationView(APIView):
+    """
+    Vue pour vérifier le statut d'authentification de l'utilisateur.
+    """
+    permission_classes = [AllowAny]
+    serializer_class = StatusAuthenticationSerializer
+
+    @extend_schema(
+        responses={
+            200: StatusAuthenticationSerializer,
+        },
+        description="Vérification du statut d'authentification",
+        operation_id="auth_status"
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Renvoie le statut d'authentification de l'utilisateur.
+        """
+        is_authenticated = request.user.is_authenticated
+        username = request.user.username if is_authenticated else None
+        is_admin = False
+        
+        if is_authenticated:
+            admin = Administrateur.objects.filter(utilisateur=request.user).first()
+            is_admin = admin is not None
+        
+        data = {
+            'is_authenticated': is_authenticated,
+            'username': username,
+            'is_admin': is_admin
+        }
+        
+        return Response(data)
 
 
 class ProfileAdminView(generics.RetrieveAPIView):
