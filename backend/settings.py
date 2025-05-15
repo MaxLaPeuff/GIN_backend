@@ -1,17 +1,25 @@
 from pathlib import Path
+<<<<<<< HEAD
+=======
+from datetime import timedelta
+from decouple import config
+import dj_database_url
+import os
+>>>>>>> 7fea0c47afe6e6c836d9115c11d73ff9ddfe8a74
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-@_=r4ls@=cke_8&ljf79ua*s__gq_vnxzaonamck#0qdd*h%kc"
+SECRET_KEY =config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
 
 REST_FRAMEWORK = {
+<<<<<<< HEAD
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -19,8 +27,20 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
+=======
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+>>>>>>> 7fea0c47afe6e6c836d9115c11d73ff9ddfe8a74
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
 }
+
 
 # Application definition
 
@@ -34,12 +54,16 @@ INSTALLED_APPS = [
     "rest_framework",
     "gin",
     'drf_spectacular',
-    "inscription",
+    #"inscription",
     "stages",
     "accounts",
     "partenaires",
     "realisations",
+<<<<<<< HEAD
     "corsheaders",
+=======
+    'corsheaders',
+>>>>>>> 7fea0c47afe6e6c836d9115c11d73ff9ddfe8a74
 ]
 
 MIDDLEWARE = [
@@ -51,7 +75,19 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # juste après SecurityMiddleware
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+
+    
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Frontend React local
+]
+
+CORS_ALLOW_CREDENTIALS = True  # Si tu utilises des cookies ou tokens avec credentials
+
 
 ROOT_URLCONF = "backend.urls"
 
@@ -77,12 +113,8 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    'default': dj_database_url.config(default=config('DATABASE_URL'))
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -118,7 +150,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # C'est ça qui manque
+
+# Si ce n’est pas déjà là :
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -170,3 +207,6 @@ SPECTACULAR_SETTINGS = {
     'LICENSE': {'name': 'BSD License'},
     'SERVE_INCLUDE_SCHEMA': False,
 }
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
