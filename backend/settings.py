@@ -11,9 +11,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY =config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
+#ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -163,3 +166,14 @@ SPECTACULAR_SETTINGS = {
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+#EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+#EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+
