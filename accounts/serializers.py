@@ -14,8 +14,8 @@ class UtilisateurSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_staff']
-        read_only_fields = ['id', 'is_staff']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser']
+        read_only_fields = ['id', 'is_staff', 'is_superuser']
 
 
 class AdministrateurSerializer(serializers.ModelSerializer):
@@ -60,11 +60,6 @@ class ConnexionSerializer(serializers.Serializer):
             if not user:
                 msg = 'Impossible de se connecter avec les identifiants fournis.'
                 raise serializers.ValidationError(msg, code='authorization')
-            
-            # Vérifier que l'utilisateur est bien un administrateur
-            admin = Administrateur.objects.filter(utilisateurs=user).first()
-            if not admin:
-                raise serializers.ValidationError("Vous n'êtes pas un administrateur.")
                 
         else:
             msg = 'Le nom d\'utilisateur et le mot de passe sont requis.'
@@ -72,3 +67,12 @@ class ConnexionSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class StatusAuthenticationSerializer(serializers.Serializer):
+    """
+    Sérialiseur pour afficher le statut d'authentification de l'utilisateur.
+    """
+    is_authenticated = serializers.BooleanField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    is_admin = serializers.BooleanField(read_only=True)

@@ -5,7 +5,9 @@ from .views import (
     RealisationCreateView,
     RealisationUpdateView,
     RealisationDeleteView,
-    liste_categories
+    liste_categories,
+    RealisationByCategoryView,  # Nouvelle vue
+    RealisationFilterByCategoryView
 )
 
 app_name = 'realisations'
@@ -28,4 +30,7 @@ urlpatterns = [
     
     # API pour obtenir la liste des catégories
     path('categories/', liste_categories, name='categorie-list'),
+
+    # API pour filtrer les réalisations par catégorie
+    path('par-categorie/', RealisationFilterByCategoryView.as_view(), name='filter-realisations-by-category'),
 ]

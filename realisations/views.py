@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny,IsAdminUser
 from rest_framework.response import Response
 from django.db.models import Count
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, extend_schema_view
+from rest_framework.views import APIView
 
 from .models import Realisation, Categorie
 from .serializers import (
@@ -11,27 +12,25 @@ from .serializers import (
     RealisationDetailSerializer,
     RealisationCreateUpdateSerializer
 )
+<<<<<<< HEAD
+from backend.permissions import EstAdministrateur
+from backend.middleware import csrf_exempt_class
+=======
+>>>>>>> 7fea0c47afe6e6c836d9115c11d73ff9ddfe8a74
 
 
 class RealisationListView(generics.ListAPIView):
     """
-    Vue pour lister toutes les réalisations avec possibilité de filtrer par catégorie.
+    Vue pour lister toutes les réalisations.
     """
     serializer_class = RealisationListSerializer
     permission_classes = [AllowAny]
     
     @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='categorie',
-                description='Filtre les réalisations par catégorie',
-                required=False, 
-                type=str,
-                enum=[c.value for c in Categorie]
-            )
-        ],
-        responses={200: RealisationListSerializer(many=True)},
-        description="Liste toutes les réalisations avec possibilité de filtrer par catégorie",
+        responses={
+            200: RealisationListSerializer(many=True)
+        },
+        description="Liste toutes les réalisations disponibles",
         operation_id="list_realisations",
         tags=["Réalisations"]
     )
@@ -40,17 +39,9 @@ class RealisationListView(generics.ListAPIView):
     
     def get_queryset(self):
         """
-        Filtre les réalisations par catégorie si un paramètre 'categorie' est fourni.
+        Retourne toutes les réalisations.
         """
-        queryset = Realisation.objects.all()
-        categorie = self.request.query_params.get('categorie')
-        
-        if categorie:
-            # Vérifier si la catégorie est valide
-            if categorie in dict(Categorie.choices):
-                queryset = queryset.filter(categorie=categorie)
-        
-        return queryset
+        return Realisation.objects.all()
 
 
 class RealisationDetailView(generics.RetrieveAPIView):
@@ -74,6 +65,7 @@ class RealisationDetailView(generics.RetrieveAPIView):
         return super().get(request, *args, **kwargs)
 
 
+@csrf_exempt_class
 class RealisationCreateView(generics.CreateAPIView):
     """
     Vue pour créer une nouvelle réalisation.
@@ -94,9 +86,26 @@ class RealisationCreateView(generics.CreateAPIView):
         tags=["Réalisations - Administration"]
     )
     def post(self, request, *args, **kwargs):
+        # Pour permettre l'utilisation de l'interface Swagger/OpenAPI
+        # Si des noms de fichiers simples sont fournis pour les images, on les traite comme null
+        # pour éviter l'erreur "The submitted data was not a file"
+        data = request.data.copy()
+        
+        # Liste des champs d'image à vérifier
+        image_fields = ['image1', 'image2', 'image3']
+        
+        for field in image_fields:
+            if field in data and isinstance(data[field], str) and not data[field].startswith('/media/'):
+                # Si c'est une simple chaîne et pas un chemin complet de média, on le traite comme null
+                data[field] = None
+        
+        # Remplacer les données de la requête par nos données modifiées
+        request._full_data = data
+        
         return super().post(request, *args, **kwargs)
 
 
+@csrf_exempt_class
 class RealisationUpdateView(generics.UpdateAPIView):
     """
     Vue pour mettre à jour une réalisation existante.
@@ -133,6 +142,7 @@ class RealisationUpdateView(generics.UpdateAPIView):
         return super().patch(request, *args, **kwargs)
 
 
+@csrf_exempt_class
 class RealisationDeleteView(generics.DestroyAPIView):
     """
     Vue pour supprimer une réalisation.
@@ -156,30 +166,72 @@ class RealisationDeleteView(generics.DestroyAPIView):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 @extend_schema(
-    responses={200: {"type": "object", "properties": {"categories": {"type": "array", "items": {"type": "object", "properties": {
-        "id": {"type": "string"},
-        "name": {"type": "string"},
-        "count": {"type": "integer"}
-    }}}}}},
-    description="Récupère la liste des catégories de réalisations disponibles pour le système de filtre",
-    operation_id="get_categorie_list",
-    tags=["Réalisations"]
-)
-@api_view(['GET'])
-@extend_schema(
-    responses={200: OpenApiResponse(description="Liste des catégories disponibles")},
-    description="Récupère la liste de toutes les catégories avec le nombre de réalisations par catégorie",
-    operation_id="list_categories",
+    parameters=[
+        OpenApiParameter(
+            name='categorie',
+            description='Filtre les réalisations par catégorie (ex: DEV_WEB, CYBERSECURITE). Si non fourni, retourne la liste des catégories.',
+            required=False,
+            type=str,
+            location=OpenApiParameter.QUERY,
+            enum=[c.value for c in Categorie],
+        )
+    ],
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "string"},
+                            "name": {"type": "string"},
+                            "count": {"type": "integer"}
+                        }
+                    }
+                },
+                "realisations": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "nomProjet": {"type": "string"},
+                            "description": {"type": "string"},
+                            "categorie": {"type": "string"}
+                        }
+                    }
+                }
+            }
+        },
+        400: OpenApiResponse(description="Paramètre 'categorie' invalide")
+    },
+    description="Récupère la liste des catégories disponibles et leur nombre de réalisations. Si un paramètre 'categorie' est fourni, retourne également les réalisations de cette catégorie.",
+    operation_id="list_categories_and_filter",
     tags=["Catégories"]
 )
 def liste_categories(request):
     """
     Vue pour récupérer la liste des catégories disponibles et leur nombre de réalisations.
-    Cette vue est utilisée pour le système de filtre sur la page des réalisations.
+    Si un paramètre 'categorie' est fourni, retourne également les réalisations de cette catégorie.
     """
+    categorie = request.query_params.get('categorie')
+
+    if categorie:
+        if categorie in dict(Categorie.choices):
+            # Récupère les réalisations de la catégorie spécifiée
+            realisations = Realisation.objects.filter(categorie=categorie)
+            serializer = RealisationListSerializer(realisations, many=True)
+            return Response({"realisations": serializer.data})
+        else:
+            return Response(
+                {"error": f"Catégorie '{categorie}' invalide. Les valeurs possibles sont: {list(dict(Categorie.choices).keys())}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
     # Récupère les catégories distinctes qui ont au moins une réalisation
     categories = Realisation.objects.values('categorie').annotate(count=Count('id')).order_by('categorie')
-    
+
     # Prépare la réponse
     formatted_categories = []
     for cat in categories:
@@ -190,11 +242,11 @@ def liste_categories(request):
             'name': cat_name,
             'count': cat['count']
         })
-    
+
     # Ajoute également toutes les catégories possibles même si elles n'ont pas de réalisations
     all_categories = dict(Categorie.choices)
     existing_cats = {cat['id'] for cat in formatted_categories}
-    
+
     for cat_value, cat_name in all_categories.items():
         if cat_value not in existing_cats:
             formatted_categories.append({
@@ -202,5 +254,87 @@ def liste_categories(request):
                 'name': cat_name,
                 'count': 0
             })
-    
-    return Response({'categories': formatted_categories})
+
+    return Response({"categories": formatted_categories})
+
+
+class RealisationByCategoryView(APIView):
+    """
+    Vue pour lister les réalisations d'une catégorie spécifique.
+    """
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='categorie',
+                description='Filtre les réalisations par catégorie (ex: DEV_WEB, CYBERSECURITE).',
+                required=False,
+                type=str,
+                location=OpenApiParameter.QUERY,
+                enum=[c.value for c in Categorie],
+            )
+        ],
+        responses={
+            200: RealisationListSerializer(many=True),
+            400: OpenApiResponse(description="Paramètre 'categorie' invalide ou manquant")
+        },
+        description="Liste les réalisations d'une catégorie spécifique. Les catégories disponibles sont : DEV_WEB, DEV_MOBILE, CYBERSECURITE, RESEAU_INFRA, IA.",
+        operation_id="list_realisations_by_category",
+        tags=["Réalisations"]
+    )
+    def get(self, request, *args, **kwargs):
+        categorie = request.query_params.get('categorie')
+        if categorie and categorie not in dict(Categorie.choices):
+            return Response(
+                {"error": "Paramètre 'categorie' invalide. Les valeurs possibles sont : {}".format(list(dict(Categorie.choices).keys()))},
+                status=400
+            )
+
+        queryset = Realisation.objects.filter(categorie=categorie) if categorie else Realisation.objects.all()
+        serializer = RealisationListSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class RealisationFilterByCategoryView(APIView):
+    """
+    Vue pour filtrer les réalisations par catégorie spécifique.
+    """
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='categorie',
+                description='Filtre les réalisations par catégorie (ex: DEV_WEB, DEV_MOBILE, CYBERSECURITE, RESEAU_INFRA, IA).',
+                required=True,
+                type=str,
+                location=OpenApiParameter.QUERY,
+                enum=[c.value for c in Categorie],
+            )
+        ],
+        responses={
+            200: RealisationListSerializer(many=True),
+            400: OpenApiResponse(description="Paramètre 'categorie' manquant ou invalide")
+        },
+        description="Filtre les réalisations par catégorie. Les catégories disponibles sont : DEV_WEB, DEV_MOBILE, CYBERSECURITE, RESEAU_INFRA, IA.",
+        operation_id="filter_realisations_by_category",
+        tags=["Réalisations"]
+    )
+    def get(self, request, *args, **kwargs):
+        categorie = request.query_params.get('categorie')
+        if not categorie:
+            return Response(
+                {"error": "Le paramètre 'categorie' est obligatoire."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if categorie not in dict(Categorie.choices):
+            return Response(
+                {"error": f"Catégorie '{categorie}' invalide. Les valeurs possibles sont : {list(dict(Categorie.choices).keys())}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        queryset = Realisation.objects.filter(categorie=categorie)
+        serializer = RealisationListSerializer(queryset, many=True)
+        return Response(serializer.data)
